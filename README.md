@@ -66,3 +66,7 @@ Arquivos SQLite, backups, exportações, senhas e sessões não entram no Git. A
 - docs/: especificação e imagens de demonstração.
 
 A [especificação de produto e arquitetura](docs/PRODUCT_ARCHITECTURE.md) registra as decisões e regras de estudo. Importação do Anki e sincronização pela internet ainda não estão implementadas.
+
+## Licença
+
+Distribuído sob a [licença MIT](LICENSE). Você pode usar, modificar e compartilhar o código, inclusive comercialmente, mantendo o aviso de direitos autorais e a licença.
