@@ -15,7 +15,7 @@ Aplicativo pessoal de flashcards para idiomas. Começa com inglês, permite adic
 - Cartões de palavra ou frase, com pergunta, resposta, exemplo, observação e tags. Só pergunta, resposta e baralho são obrigatórios.
 - Revisão em um sentido ou nos dois. Cada sentido é uma unidade de revisão independente, com estado e histórico próprios.
 - Tela inicial com revisões vencidas, cartões novos disponíveis, tempo estudado e sequência de dias. Gráficos aparecem apenas quando houver dados suficientes.
-- Revisar tudo que estiver vencido; apresentar até 10 unidades de revisão novas por dia, globalmente, com limite configurável.
+- Manter todas as revisões vencidas pendentes, com limite configurável de cartões por sessão. A pessoa pode estudar vencidos, novos ou ambos; o que não couber fica pendente para outra sessão. O limite diário de novos continua separado.
 - Sessão com revelar resposta e avaliar: Errei, Difícil, Bom, Fácil. Cada avaliação é persistida imediatamente.
 - Exportar dados, fazer backup automático e restaurar uma cópia.
 - Criar uma conta principal no primeiro uso; essa conta pode criar outras contas locais se alguém da casa quiser usar o app. Cada conta tem baralhos, progresso e estatísticas próprios.
@@ -76,7 +76,7 @@ Usar identificadores estáveis, migrações de banco incrementais e transações
 ## Regras de estudo
 
 - “Pendente” significa que a próxima revisão venceu; todos os pendentes são acessíveis, mesmo após dias sem estudo.
-- O limite inicial é de **10 unidades de revisão novas por dia por usuário**, somando seus baralhos e idiomas. Cada sentido novo conta separadamente.
+- O limite inicial é de **10 unidades de revisão novas por dia por usuário**, somando seus baralhos e idiomas. Cada sentido novo conta separadamente. O limite de sessão é separado, inicia em 20 cartões e pode ser removido ou ajustado.
 - A fila do dia prioriza revisões vencidas e depois novos; cada grupo é embaralhado. Estudar um baralho filtra a fila por ele. O painel atualiza os pendentes a cada minuto e quando a aba volta ao foco. O treino livre embaralha cartões já introduzidos e não altera o estado FSRS nem o histórico de revisões.
 - O dia de estudo segue o fuso `America/Sao_Paulo` inicialmente, com possibilidade de configurar depois.
 - Editar conteúdo preserva o progresso. A ação explícita “Reiniciar progresso” pede confirmação e permite escolher um sentido ou ambos.

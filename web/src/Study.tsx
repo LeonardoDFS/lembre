@@ -7,7 +7,8 @@ export type StudyItem = {
   direction: 'forward' | 'reverse'; isNew: boolean; prompt: string; answer: string; example: string; notes: string; hasAudio: boolean; intervals?: string[];
 };
 export type Queue = { dueCount: number; newCount: number; items: StudyItem[] };
-type Props = { deckId: string | null; practice: boolean; onBack: () => void; onChanged: () => Promise<void> };
+type StudyMode = 'all' | 'new' | 'due';
+type Props = { deckId: string | null; practice: boolean; mode: StudyMode; sessionLimit: number; onBack: () => void; onChanged: () => Promise<void> };
 const ratings = [
   { value: 1, label: 'Errei', className: 'again' },
   { value: 2, label: 'Difícil', className: 'hard' },
@@ -15,7 +16,7 @@ const ratings = [
   { value: 4, label: 'Fácil', className: 'easy' }
 ];
 
-export default function StudyPage({ deckId, practice, onBack, onChanged }: Props) {
+export default function StudyPage({ deckId, practice, mode, sessionLimit, onBack, onChanged }: Props) {
   const [queue, setQueue] = useState<Queue | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -25,14 +26,20 @@ export default function StudyPage({ deckId, practice, onBack, onChanged }: Props
   const [startedAt] = useState(Date.now());
   const cardStartedAt = useRef(Date.now());
   const [finished, setFinished] = useState(false);
-  const path = (practice ? '/study/practice' : '/study/queue') + (deckId ? '?deckId=' + encodeURIComponent(deckId) : '');
+  function queuePath(remaining = sessionLimit) {
+    const params = new URLSearchParams();
+    if (deckId) params.set('deckId', deckId);
+    if (!practice) { params.set('mode', mode); params.set('limit', String(remaining)); }
+    const query = params.toString();
+    return (practice ? '/study/practice' : '/study/queue') + (query ? '?' + query : '');
+  }
 
   async function refresh() {
-    const next = await api<Queue>(path);
+    const next = await api<Queue>(queuePath());
     setQueue(next);
     if (next.items.length === 0 && (practiceReviewed + counts.reduce((a, b) => a + b, 0)) > 0) setFinished(true);
   }
-  useEffect(() => { refresh().catch((cause) => setError(cause.message)); }, [deckId, practice]);
+  useEffect(() => { refresh().catch((cause) => setError(cause.message)); }, [deckId, practice, mode, sessionLimit]);
 
   function advancePractice() {
     if (!practice || !revealed || !queue) return;
@@ -52,10 +59,17 @@ export default function StudyPage({ deckId, practice, onBack, onChanged }: Props
       await api('/study/' + item.unitId + '/rate', 'POST', { rating: value, elapsedMs: Date.now() - cardStartedAt.current });
       setCounts((old) => old.map((count, index) => index === value - 1 ? count + 1 : count));
       setRevealed(false);
-      const next = await api<Queue>(path);
-      setQueue(next);
+      const completed = reviewed + 1;
+      const remainingLimit = sessionLimit > 0 ? Math.max(0, sessionLimit - completed) : 0;
       cardStartedAt.current = Date.now();
-      if (next.items.length === 0) setFinished(true);
+      if (sessionLimit > 0 && remainingLimit === 0) {
+        setQueue((current) => current ? { ...current, items: [] } : current);
+        setFinished(true);
+      } else {
+        const next = await api<Queue>(queuePath(remainingLimit));
+        setQueue(next);
+        if (next.items.length === 0) setFinished(true);
+      }
       await onChanged();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Não foi possível salvar a revisão.');
@@ -83,8 +97,8 @@ export default function StudyPage({ deckId, practice, onBack, onChanged }: Props
     <button className="primary" onClick={onBack}>Voltar ao início</button>
   </div>;
   if (!queue && !error) return <div className="center-screen">Preparando revisão...</div>;
-  if (!item) return <div className="study-wrap empty-study"><div className="eyebrow">{practice ? 'TREINO LIVRE' : 'REVISÃO EM DIA'}</div><h1>{practice ? 'Nenhum cartão estudado ainda.' : 'Nada pendente agora.'}</h1>
-    <p className="intro">{practice ? 'Estude um cartão na revisão normal para incluí-lo no treino livre.' : 'Quando um cartão estiver pronto para revisão, ele aparecerá aqui.'}</p>
+  if (!item) return <div className="study-wrap empty-study"><div className="eyebrow">{practice ? 'TREINO LIVRE' : mode === 'new' ? 'CARTÕES NOVOS' : mode === 'due' ? 'REVISÕES VENCIDAS' : 'REVISÃO EM DIA'}</div><h1>{practice ? 'Nenhum cartão estudado ainda.' : mode === 'new' ? 'Nenhum cartão novo disponível.' : mode === 'due' ? 'Nenhuma revisão vencida.' : 'Nada pendente agora.'}</h1>
+    <p className="intro">{practice ? 'Estude um cartão na revisão normal para incluí-lo no treino livre.' : mode === 'new' ? 'Os cartões novos respeitam o limite diário escolhido.' : mode === 'due' ? 'As revisões que vencerem aparecerão nesta sessão.' : 'Quando um cartão estiver pronto para revisão, ele aparecerá aqui.'}</p>
     {error && <div className="error" role="alert">{error}</div>}<button className="primary" onClick={onBack}>Voltar ao início</button></div>;
   return <div className="study-wrap">
     {practice && <p className="practice-note">Treino livre · ordem aleatória · sem alterar o agendamento</p>}

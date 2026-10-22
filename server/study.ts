@@ -56,7 +56,7 @@ function shuffle<T>(items: T[]): T[] {
   return mixed;
 }
 
-function makeQueue(db: Db, userId: string, deckId: string | null) {
+function makeQueue(db: Db, userId: string, deckId: string | null, mode: 'all' | 'new' | 'due' = 'all', sessionLimit = 0) {
   const now = new Date();
   const today = localDay(now, getTimezone(db, userId));
   const introducedToday = (db.prepare(`SELECT COUNT(*) AS count FROM review_units u
@@ -68,7 +68,10 @@ function makeQueue(db: Db, userId: string, deckId: string | null) {
   const due = shuffle(rows.filter((row) => row.introducedDay !== null && row.dueAt <= now.toISOString()));
   const fresh = shuffle(rows.filter((row) => row.introducedDay === null));
   const availableNew = Math.max(0, limit - introducedToday);
-  const chosen = [...due, ...fresh.slice(0, availableNew)];
+  const dueForSession = mode === 'new' ? [] : due;
+  const newForSession = mode === 'due' ? [] : fresh.slice(0, availableNew);
+  const allAvailable = [...dueForSession, ...newForSession];
+  const chosen = sessionLimit > 0 ? allAvailable.slice(0, sessionLimit) : allAvailable;
   return {
     dueCount: due.length,
     newCount: Math.min(fresh.length, availableNew),
@@ -325,7 +328,13 @@ export function registerStudyRoutes(app: FastifyInstance, db: Db, authenticate: 
     if (!user) return;
     const deckId = field((request.query as { deckId?: string }).deckId, 40) || null;
     if (deckId && !ownerDeck(db, deckId, user.id)) return reply.code(404).send({ error: 'Baralho não encontrado.' });
-    return makeQueue(db, user.id, deckId);
+    const query = request.query as { mode?: string; limit?: string };
+    const mode = query.mode ?? 'all';
+    const limit = query.limit === undefined ? 0 : Number(query.limit);
+    if (!['all', 'new', 'due'].includes(mode) || !Number.isInteger(limit) || limit < 0 || limit > 100) {
+      return reply.code(400).send({ error: 'Tipo de sessão ou limite inválido.' });
+    }
+    return makeQueue(db, user.id, deckId, mode as 'all' | 'new' | 'due', limit);
   });
 
   app.post('/api/study/:unitId/rate', async (request, reply) => {

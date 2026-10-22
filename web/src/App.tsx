@@ -8,6 +8,7 @@ type User = { id: string; name: string; role: 'owner' | 'member'; active?: numbe
 type Language = { id: string; name: string; code: string | null };
 type Settings = { theme: 'light' | 'dark'; newPerDay: number; timezone: string };
 type View = 'home' | 'decks' | 'cards' | 'study' | 'users' | 'data';
+type StudyMode = 'all' | 'new' | 'due';
 type Stats = { totalReviews: number; reviewedToday: number; timeTodayMs: number; streakDays: number };
 type Dialog = 'language' | 'editLanguage' | 'deck' | 'editDeck' | 'user' | 'resetUser' | null;
 type Backup = { name: string; bytes: number; modifiedAt: string };
@@ -37,6 +38,8 @@ export default function App() {
   const [activeDeckId, setActiveDeckId] = useState<string | null>(null);
   const [studyDeckId, setStudyDeckId] = useState<string | null>(null);
   const [practice, setPractice] = useState(false);
+  const [studyMode, setStudyMode] = useState<StudyMode>('all');
+  const [sessionLimit, setSessionLimit] = useState(20);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
   const [selectedDeck, setSelectedDeck] = useState<Deck | null>(null);
@@ -315,9 +318,18 @@ export default function App() {
             <div className="stat-card"><span>Tempo hoje</span><strong>{Math.round(stats.timeTodayMs / 60000)} min</strong></div>
             <div className="stat-card"><span>Sequência</span><strong>{stats.streakDays} {stats.streakDays === 1 ? 'dia' : 'dias'}</strong></div></div>
           <ActivityMap activity={activity} />
-          <div className="study-options"><span>Cartões novos por dia</span><select aria-label="Cartões novos por dia" value={settings.newPerDay} onChange={(event) => updateNewLimit(Number(event.target.value))}>
-            {[0, 5, 10, 20, 50].map((value) => <option key={value} value={value}>{value}</option>)}
-          </select><small>Revisões vencidas continuam disponíveis.</small></div>
+          <div className="study-options">
+            <label>Novos por dia<select aria-label="Cartões novos por dia" value={settings.newPerDay} onChange={(event) => updateNewLimit(Number(event.target.value))}>
+              {[0, 5, 10, 20, 50].map((value) => <option key={value} value={value}>{value}</option>)}
+            </select></label>
+            <label>Cartões por sessão<select aria-label="Cartões por sessão" value={sessionLimit} onChange={(event) => setSessionLimit(Number(event.target.value))}>
+              {[10, 20, 30, 50, 0].map((value) => <option key={value} value={value}>{value || 'Sem limite'}</option>)}
+            </select></label>
+            <label>Estudar<select aria-label="Tipo de sessão" value={studyMode} onChange={(event) => setStudyMode(event.target.value as StudyMode)}>
+              <option value="all">Revisões e novos</option><option value="new">Só novos</option><option value="due">Só revisões vencidas</option>
+            </select></label>
+            <small>O que ficar pendente continua disponível para outra sessão. Novos respeitam o limite diário.</small>
+          </div>
           <div className="section-heading"><h2>Seus idiomas</h2><button className="text-button" onClick={() => openDialog('language')}>+ Adicionar idioma</button></div>
           {languages.length ? <div className="language-list">{languages.map((language) => <div className="language-entry" key={language.id}>
               <button className="language-main" onClick={() => setView('decks')}><span className="language-icon">文</span><strong>{language.name}</strong><span>{decks.filter((deck) => deck.languageId === language.id).length} baralhos →</span></button>
@@ -340,7 +352,7 @@ export default function App() {
           </article>)}</div> : <div className="empty">{decks.length ? 'Nenhum baralho corresponde à busca.' : 'Você ainda não criou um baralho. Crie um para organizar seus primeiros cartões.'}</div>}
         </>}
         {view === 'cards' && activeDeck && <CardsPage deck={activeDeck} onBack={() => setView('decks')} onChanged={() => loadData(user.role)} />}
-        {view === 'study' && <StudyPage practice={practice} deckId={studyDeckId} onBack={() => { setView('home'); loadData(user.role).catch((cause) => setError(cause.message)); }} onChanged={() => loadData(user.role)} />}
+        {view === 'study' && <StudyPage practice={practice} deckId={studyDeckId} mode={studyMode} sessionLimit={sessionLimit} onBack={() => { setView('home'); loadData(user.role).catch((cause) => setError(cause.message)); }} onChanged={() => loadData(user.role)} />}
         {view === 'data' && <>
           <div className="eyebrow">SEUS DADOS</div><h1>Dados e ajustes</h1>
           <p className="intro">Seus dados ficam neste PC, em uma pasta separada do código. Cada conta tem seus próprios baralhos e progresso.</p>
