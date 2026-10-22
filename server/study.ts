@@ -56,7 +56,7 @@ function shuffle<T>(items: T[]): T[] {
   return mixed;
 }
 
-function makeQueue(db: Db, userId: string, deckId: string | null, mode: 'all' | 'new' | 'due' = 'all', sessionLimit = 0) {
+function makeQueue(db: Db, userId: string, deckId: string | null, mode: 'all' | 'new' | 'due' = 'all', reviewLimit = 0) {
   const now = new Date();
   const today = localDay(now, getTimezone(db, userId));
   const introducedToday = (db.prepare(`SELECT COUNT(*) AS count FROM review_units u
@@ -70,8 +70,8 @@ function makeQueue(db: Db, userId: string, deckId: string | null, mode: 'all' | 
   const availableNew = Math.max(0, limit - introducedToday);
   const dueForSession = mode === 'new' ? [] : due;
   const newForSession = mode === 'due' ? [] : fresh.slice(0, availableNew);
-  const allAvailable = [...dueForSession, ...newForSession];
-  const chosen = sessionLimit > 0 ? allAvailable.slice(0, sessionLimit) : allAvailable;
+  const dueWithinLimit = reviewLimit > 0 ? dueForSession.slice(0, reviewLimit) : dueForSession;
+  const chosen = [...newForSession, ...dueWithinLimit];
   return {
     dueCount: due.length,
     newCount: Math.min(fresh.length, availableNew),
@@ -106,22 +106,25 @@ export function registerStudyRoutes(app: FastifyInstance, db: Db, authenticate: 
   app.get('/api/settings', async (request, reply) => {
     const user = authenticate(db, request, reply);
     if (!user) return;
-    return db.prepare('SELECT new_per_day AS newPerDay, timezone, theme FROM settings WHERE user_id = ?').get(user.id);
+    return db.prepare('SELECT new_per_day AS newPerDay, review_per_session AS reviewPerSession, timezone, theme FROM settings WHERE user_id = ?').get(user.id);
   });
 
   app.patch('/api/settings', async (request, reply) => {
     const user = authenticate(db, request, reply);
     if (!user) return;
     const body = object(request);
-    const current = db.prepare('SELECT new_per_day AS newPerDay, theme FROM settings WHERE user_id = ?')
-      .get(user.id) as { newPerDay: number; theme: string };
+    const current = db.prepare('SELECT new_per_day AS newPerDay, review_per_session AS reviewPerSession, theme FROM settings WHERE user_id = ?')
+      .get(user.id) as { newPerDay: number; reviewPerSession: number; theme: string };
     const theme = body.theme === undefined ? current.theme : body.theme;
     const limit = body.newPerDay === undefined ? current.newPerDay : body.newPerDay;
-    if (!['light', 'dark'].includes(String(theme)) || !Number.isInteger(limit) || Number(limit) < 0 || Number(limit) > 100) {
+    const reviewLimit = body.reviewPerSession === undefined ? current.reviewPerSession : body.reviewPerSession;
+    if (!['light', 'dark'].includes(String(theme)) || !Number.isInteger(limit) || Number(limit) < 0 || Number(limit) > 100
+      || !Number.isInteger(reviewLimit) || Number(reviewLimit) < 0 || Number(reviewLimit) > 100) {
       return reply.code(400).send({ error: 'Preferência inválida.' });
     }
-    db.prepare('UPDATE settings SET theme = ?, new_per_day = ? WHERE user_id = ?').run(theme, limit, user.id);
-    return { theme, newPerDay: limit };
+    db.prepare('UPDATE settings SET theme = ?, new_per_day = ?, review_per_session = ? WHERE user_id = ?')
+      .run(theme, limit, reviewLimit, user.id);
+    return { theme, newPerDay: limit, reviewPerSession: reviewLimit };
   });
 
   app.get('/api/study/stats', async (request, reply) => {
@@ -328,13 +331,13 @@ export function registerStudyRoutes(app: FastifyInstance, db: Db, authenticate: 
     if (!user) return;
     const deckId = field((request.query as { deckId?: string }).deckId, 40) || null;
     if (deckId && !ownerDeck(db, deckId, user.id)) return reply.code(404).send({ error: 'Baralho não encontrado.' });
-    const query = request.query as { mode?: string; limit?: string };
+    const query = request.query as { mode?: string; reviewLimit?: string };
     const mode = query.mode ?? 'all';
-    const limit = query.limit === undefined ? 0 : Number(query.limit);
-    if (!['all', 'new', 'due'].includes(mode) || !Number.isInteger(limit) || limit < 0 || limit > 100) {
+    const reviewLimit = query.reviewLimit === undefined ? 0 : Number(query.reviewLimit);
+    if (!['all', 'new', 'due'].includes(mode) || !Number.isInteger(reviewLimit) || reviewLimit < 0 || reviewLimit > 100) {
       return reply.code(400).send({ error: 'Tipo de sessão ou limite inválido.' });
     }
-    return makeQueue(db, user.id, deckId, mode as 'all' | 'new' | 'due', limit);
+    return makeQueue(db, user.id, deckId, mode as 'all' | 'new' | 'due', reviewLimit);
   });
 
   app.post('/api/study/:unitId/rate', async (request, reply) => {

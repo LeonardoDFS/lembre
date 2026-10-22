@@ -8,7 +8,7 @@ export type StudyItem = {
 };
 export type Queue = { dueCount: number; newCount: number; items: StudyItem[] };
 type StudyMode = 'all' | 'new' | 'due';
-type Props = { deckId: string | null; practice: boolean; mode: StudyMode; sessionLimit: number; onBack: () => void; onChanged: () => Promise<void> };
+type Props = { deckId: string | null; practice: boolean; mode: StudyMode; reviewLimit: number; onBack: () => void; onChanged: () => Promise<void> };
 const ratings = [
   { value: 1, label: 'Errei', className: 'again' },
   { value: 2, label: 'Difícil', className: 'hard' },
@@ -16,20 +16,21 @@ const ratings = [
   { value: 4, label: 'Fácil', className: 'easy' }
 ];
 
-export default function StudyPage({ deckId, practice, mode, sessionLimit, onBack, onChanged }: Props) {
+export default function StudyPage({ deckId, practice, mode, reviewLimit, onBack, onChanged }: Props) {
   const [queue, setQueue] = useState<Queue | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [counts, setCounts] = useState([0, 0, 0, 0]);
   const [practiceReviewed, setPracticeReviewed] = useState(0);
+  const [dueReviewed, setDueReviewed] = useState(0);
   const [startedAt] = useState(Date.now());
   const cardStartedAt = useRef(Date.now());
   const [finished, setFinished] = useState(false);
-  function queuePath(remaining = sessionLimit) {
+  function queuePath(remainingReviews = reviewLimit) {
     const params = new URLSearchParams();
     if (deckId) params.set('deckId', deckId);
-    if (!practice) { params.set('mode', mode); params.set('limit', String(remaining)); }
+    if (!practice) { params.set('mode', mode); params.set('reviewLimit', String(remainingReviews)); }
     const query = params.toString();
     return (practice ? '/study/practice' : '/study/queue') + (query ? '?' + query : '');
   }
@@ -39,7 +40,7 @@ export default function StudyPage({ deckId, practice, mode, sessionLimit, onBack
     setQueue(next);
     if (next.items.length === 0 && (practiceReviewed + counts.reduce((a, b) => a + b, 0)) > 0) setFinished(true);
   }
-  useEffect(() => { refresh().catch((cause) => setError(cause.message)); }, [deckId, practice, mode, sessionLimit]);
+  useEffect(() => { refresh().catch((cause) => setError(cause.message)); }, [deckId, practice, mode, reviewLimit]);
 
   function advancePractice() {
     if (!practice || !revealed || !queue) return;
@@ -59,14 +60,15 @@ export default function StudyPage({ deckId, practice, mode, sessionLimit, onBack
       await api('/study/' + item.unitId + '/rate', 'POST', { rating: value, elapsedMs: Date.now() - cardStartedAt.current });
       setCounts((old) => old.map((count, index) => index === value - 1 ? count + 1 : count));
       setRevealed(false);
-      const completed = reviewed + 1;
-      const remainingLimit = sessionLimit > 0 ? Math.max(0, sessionLimit - completed) : 0;
+      const completedReviews = dueReviewed + (item.isNew ? 0 : 1);
+      if (!item.isNew) setDueReviewed(completedReviews);
+      const remainingReviews = reviewLimit > 0 ? Math.max(0, reviewLimit - completedReviews) : 0;
       cardStartedAt.current = Date.now();
-      if (sessionLimit > 0 && remainingLimit === 0) {
+      if (!item.isNew && reviewLimit > 0 && remainingReviews === 0) {
         setQueue((current) => current ? { ...current, items: [] } : current);
         setFinished(true);
       } else {
-        const next = await api<Queue>(queuePath(remainingLimit));
+        const next = await api<Queue>(queuePath(remainingReviews));
         setQueue(next);
         if (next.items.length === 0) setFinished(true);
       }

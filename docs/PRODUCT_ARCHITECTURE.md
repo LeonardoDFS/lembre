@@ -1,8 +1,8 @@
 # Lembre — produto e arquitetura
 
-Estado: decisões para a primeira versão (14/10/2026).  
-Implementado: contas locais, idiomas com renomeação e exclusão, baralhos, busca de cartões, cartões com destaque, negrito e áudio opcional, revisão espaçada e prévia de intervalos, limite diário, modo escuro, estatísticas, exportação JSON por conta, restauração por conta e de backup completo com cópia prévia, troca de senha, desativação/reativação de usuários e backups automáticos do SQLite, mapa de atividades e iniciador Lembre.exe com desligamento pelo app. O endereço IPv4 privado do PC respondeu no teste de rede local e o acesso pelo celular na rede local foi confirmado.  
-Pasta do projeto: repositório lembre.  
+Estado: decisões para a primeira versão (14/10/2026).
+Implementado: contas locais, idiomas com renomeação e exclusão, baralhos, busca de cartões, cartões com destaque, negrito e áudio opcional, revisão espaçada e prévia de intervalos, prioridade de cartões novos e limite de revisões por sessão, limite diário, modo escuro, estatísticas, exportação JSON por conta, restauração por conta e de backup completo com cópia prévia, troca de senha, desativação/reativação de usuários e backups automáticos do SQLite, mapa de atividades e iniciador Lembre.exe com desligamento pelo app. O endereço IPv4 privado do PC respondeu no teste de rede local e o acesso pelo celular na rede local foi confirmado.
+Pasta do projeto: repositório lembre.
 Referência visual: protótipos estáticos criados no Stitch; a implementação está neste repositório.
 
 ## Objetivo
@@ -15,7 +15,7 @@ Aplicativo pessoal de flashcards para idiomas. Começa com inglês, permite adic
 - Cartões de palavra ou frase, com pergunta, resposta, exemplo, observação e tags. Só pergunta, resposta e baralho são obrigatórios.
 - Revisão em um sentido ou nos dois. Cada sentido é uma unidade de revisão independente, com estado e histórico próprios.
 - Tela inicial com revisões vencidas, cartões novos disponíveis, tempo estudado e sequência de dias. Gráficos aparecem apenas quando houver dados suficientes.
-- Manter todas as revisões vencidas pendentes, com limite configurável de cartões por sessão. A pessoa pode estudar vencidos, novos ou ambos; o que não couber fica pendente para outra sessão. O limite diário de novos continua separado.
+- Manter todas as revisões vencidas pendentes, com limite configurável de revisões por sessão. Cartões novos entram primeiro, limitados separadamente por dia. A pessoa pode estudar vencidos, novos ou ambos; o que não couber fica pendente para outra sessão.
 - Sessão com revelar resposta e avaliar: Errei, Difícil, Bom, Fácil. Cada avaliação é persistida imediatamente.
 - Exportar dados, fazer backup automático e restaurar uma cópia.
 - Criar uma conta principal no primeiro uso; essa conta pode criar outras contas locais se alguém da casa quiser usar o app. Cada conta tem baralhos, progresso e estatísticas próprios.
@@ -67,7 +67,7 @@ pasta-pai\
 - **Áudio do cartão:** um anexo opcional por cartão, armazenado no SQLite; MP3, WAV, OGG, M4A ou WebM, até 5 MB.
 - **Unidade de revisão:** id, cartão_id, sentido, estado FSRS, próxima revisão, datas. Um cartão bidirecional tem duas unidades.
 - **Registro de revisão:** id, unidade_id, avaliação, data/hora, dia local, tempo gasto e estado antes/depois.
-- **Configuração:** usuario_id, limite diário de novos cartões, fuso horário, preferências de estudo.
+- **Configuração:** usuario_id, limite diário de novos cartões, limite de revisões por sessão, fuso horário, preferências de estudo.
 
 Baralhos pertencem ao usuário por meio do idioma; cartões e revisões herdam essa propriedade. Toda consulta e alteração pela API deve verificar o usuário autenticado.
 
@@ -76,8 +76,8 @@ Usar identificadores estáveis, migrações de banco incrementais e transações
 ## Regras de estudo
 
 - “Pendente” significa que a próxima revisão venceu; todos os pendentes são acessíveis, mesmo após dias sem estudo.
-- O limite inicial é de **10 unidades de revisão novas por dia por usuário**, somando seus baralhos e idiomas. Cada sentido novo conta separadamente. O limite de sessão é separado, inicia em 20 cartões e pode ser removido ou ajustado.
-- A fila do dia prioriza revisões vencidas e depois novos; cada grupo é embaralhado. Estudar um baralho filtra a fila por ele. O painel atualiza os pendentes a cada minuto e quando a aba volta ao foco. O treino livre embaralha cartões já introduzidos e não altera o estado FSRS nem o histórico de revisões.
+- O limite inicial é de **10 unidades de revisão novas por dia por usuário**, somando seus baralhos e idiomas. Cada sentido novo conta separadamente. O limite inicial de revisões é de 10 por sessão e pode ser ajustado para 5, 10, 20 ou sem limite; essa preferência fica salva por usuário. Novos entram primeiro e respeitam o limite diário separado.
+- A fila do dia prioriza cartões novos e depois revisões vencidas; cada grupo é embaralhado. O limite diário controla os novos, e o limite independente controla quantas revisões vencidas entram na sessão. Estudar um baralho filtra a fila por ele. O painel atualiza os pendentes a cada minuto e quando a aba volta ao foco. O treino livre embaralha cartões já introduzidos e não altera o estado FSRS nem o histórico de revisões.
 - O dia de estudo segue o fuso `America/Sao_Paulo` inicialmente, com possibilidade de configurar depois.
 - Editar conteúdo preserva o progresso. A ação explícita “Reiniciar progresso” pede confirmação e permite escolher um sentido ou ambos.
 - Excluir cartão/baralho pede confirmação e informa o efeito sobre revisões e histórico.

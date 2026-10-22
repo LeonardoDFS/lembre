@@ -6,7 +6,7 @@ import ActivityMap, { type Activity } from './ActivityMap';
 
 type User = { id: string; name: string; role: 'owner' | 'member'; active?: number };
 type Language = { id: string; name: string; code: string | null };
-type Settings = { theme: 'light' | 'dark'; newPerDay: number; timezone: string };
+type Settings = { theme: 'light' | 'dark'; newPerDay: number; reviewPerSession: number; timezone: string };
 type View = 'home' | 'decks' | 'cards' | 'study' | 'users' | 'data';
 type StudyMode = 'all' | 'new' | 'due';
 type Stats = { totalReviews: number; reviewedToday: number; timeTodayMs: number; streakDays: number };
@@ -33,13 +33,12 @@ export default function App() {
   const [restoreName, setRestoreName] = useState('');
   const [restorePassword, setRestorePassword] = useState('');
   const [restorePhrase, setRestorePhrase] = useState('');
-  const [settings, setSettings] = useState<Settings>({ theme: 'light', newPerDay: 10, timezone: 'America/Sao_Paulo' });
+  const [settings, setSettings] = useState<Settings>({ theme: 'light', newPerDay: 10, reviewPerSession: 10, timezone: 'America/Sao_Paulo' });
   const [view, setView] = useState<View>('home');
   const [activeDeckId, setActiveDeckId] = useState<string | null>(null);
   const [studyDeckId, setStudyDeckId] = useState<string | null>(null);
   const [practice, setPractice] = useState(false);
   const [studyMode, setStudyMode] = useState<StudyMode>('all');
-  const [sessionLimit, setSessionLimit] = useState(20);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
   const [selectedDeck, setSelectedDeck] = useState<Deck | null>(null);
@@ -136,6 +135,13 @@ export default function App() {
       await api('/settings', 'PATCH', { newPerDay: value });
       await loadData(user?.role);
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível alterar o limite diário.'); }
+  }
+  async function updateReviewLimit(value: number) {
+    setError('');
+    try {
+      await api('/settings', 'PATCH', { reviewPerSession: value });
+      await loadData(user?.role);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível alterar o limite de revisões.'); }
   }
   async function toggleTheme() {
     const next = settings.theme === 'light' ? 'dark' : 'light';
@@ -322,13 +328,13 @@ export default function App() {
             <label>Novos por dia<select aria-label="Cartões novos por dia" value={settings.newPerDay} onChange={(event) => updateNewLimit(Number(event.target.value))}>
               {[0, 5, 10, 20, 50].map((value) => <option key={value} value={value}>{value}</option>)}
             </select></label>
-            <label>Cartões por sessão<select aria-label="Cartões por sessão" value={sessionLimit} onChange={(event) => setSessionLimit(Number(event.target.value))}>
-              {[10, 20, 30, 50, 0].map((value) => <option key={value} value={value}>{value || 'Sem limite'}</option>)}
+            <label>Revisões por sessão<select aria-label="Revisões por sessão" value={settings.reviewPerSession} onChange={(event) => updateReviewLimit(Number(event.target.value))}>
+              {[5, 10, 20, 0].map((value) => <option key={value} value={value}>{value || 'Sem limite'}</option>)}
             </select></label>
             <label>Estudar<select aria-label="Tipo de sessão" value={studyMode} onChange={(event) => setStudyMode(event.target.value as StudyMode)}>
               <option value="all">Revisões e novos</option><option value="new">Só novos</option><option value="due">Só revisões vencidas</option>
             </select></label>
-            <small>O que ficar pendente continua disponível para outra sessão. Novos respeitam o limite diário.</small>
+            <small>Os novos entram primeiro. Revisões além do limite continuam pendentes; novos respeitam o limite diário.</small>
           </div>
           <div className="section-heading"><h2>Seus idiomas</h2><button className="text-button" onClick={() => openDialog('language')}>+ Adicionar idioma</button></div>
           {languages.length ? <div className="language-list">{languages.map((language) => <div className="language-entry" key={language.id}>
@@ -352,7 +358,7 @@ export default function App() {
           </article>)}</div> : <div className="empty">{decks.length ? 'Nenhum baralho corresponde à busca.' : 'Você ainda não criou um baralho. Crie um para organizar seus primeiros cartões.'}</div>}
         </>}
         {view === 'cards' && activeDeck && <CardsPage deck={activeDeck} onBack={() => setView('decks')} onChanged={() => loadData(user.role)} />}
-        {view === 'study' && <StudyPage practice={practice} deckId={studyDeckId} mode={studyMode} sessionLimit={sessionLimit} onBack={() => { setView('home'); loadData(user.role).catch((cause) => setError(cause.message)); }} onChanged={() => loadData(user.role)} />}
+        {view === 'study' && <StudyPage practice={practice} deckId={studyDeckId} mode={studyMode} reviewLimit={settings.reviewPerSession} onBack={() => { setView('home'); loadData(user.role).catch((cause) => setError(cause.message)); }} onChanged={() => loadData(user.role)} />}
         {view === 'data' && <>
           <div className="eyebrow">SEUS DADOS</div><h1>Dados e ajustes</h1>
           <p className="intro">Seus dados ficam neste PC, em uma pasta separada do código. Cada conta tem seus próprios baralhos e progresso.</p>
