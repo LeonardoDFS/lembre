@@ -27,6 +27,7 @@ export default function StudyPage({ deckId, practice, mode, reviewLimit, onBack,
   const [startedAt] = useState(Date.now());
   const cardStartedAt = useRef(Date.now());
   const [finished, setFinished] = useState(false);
+  const seenCardIds = useRef(new Set<string>());
   function queuePath(remainingReviews = reviewLimit) {
     const params = new URLSearchParams();
     if (deckId) params.set('deckId', deckId);
@@ -35,8 +36,18 @@ export default function StudyPage({ deckId, practice, mode, reviewLimit, onBack,
     return (practice ? '/study/practice' : '/study/queue') + (query ? '?' + query : '');
   }
 
+  function omitSeenCards(next: Queue): Queue {
+    const included = new Set<string>();
+    const items = next.items.filter((candidate) => {
+      if (seenCardIds.current.has(candidate.cardId) || included.has(candidate.cardId)) return false;
+      included.add(candidate.cardId);
+      return true;
+    });
+    return { ...next, items };
+  }
+
   async function refresh() {
-    const next = await api<Queue>(queuePath());
+    const next = omitSeenCards(await api<Queue>(queuePath()));
     setQueue(next);
     if (next.items.length === 0 && (practiceReviewed + counts.reduce((a, b) => a + b, 0)) > 0) setFinished(true);
   }
@@ -44,7 +55,8 @@ export default function StudyPage({ deckId, practice, mode, reviewLimit, onBack,
 
   function advancePractice() {
     if (!practice || !revealed || !queue) return;
-    const remaining = queue.items.slice(1);
+    seenCardIds.current.add(queue.items[0].cardId);
+    const remaining = queue.items.slice(1).filter((candidate) => candidate.cardId !== queue.items[0].cardId);
     setQueue({ ...queue, items: remaining });
     setPracticeReviewed((count) => count + 1);
     setRevealed(false);
@@ -58,6 +70,7 @@ export default function StudyPage({ deckId, practice, mode, reviewLimit, onBack,
     setBusy(true); setError('');
     try {
       await api('/study/' + item.unitId + '/rate', 'POST', { rating: value, elapsedMs: Date.now() - cardStartedAt.current });
+      seenCardIds.current.add(item.cardId);
       setCounts((old) => old.map((count, index) => index === value - 1 ? count + 1 : count));
       setRevealed(false);
       const completedReviews = dueReviewed + (item.isNew ? 0 : 1);
@@ -68,7 +81,7 @@ export default function StudyPage({ deckId, practice, mode, reviewLimit, onBack,
         setQueue((current) => current ? { ...current, items: [] } : current);
         setFinished(true);
       } else {
-        const next = await api<Queue>(queuePath(remainingReviews));
+        const next = omitSeenCards(await api<Queue>(queuePath(remainingReviews)));
         setQueue(next);
         if (next.items.length === 0) setFinished(true);
       }

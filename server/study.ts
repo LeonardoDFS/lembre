@@ -55,6 +55,14 @@ function shuffle<T>(items: T[]): T[] {
   }
   return mixed;
 }
+function uniqueCards(rows: Row[]): Row[] {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    if (seen.has(row.cardId)) return false;
+    seen.add(row.cardId);
+    return true;
+  });
+}
 
 function makeQueue(db: Db, userId: string, deckId: string | null, mode: 'all' | 'new' | 'due' = 'all', reviewLimit = 0) {
   const now = new Date();
@@ -65,16 +73,20 @@ function makeQueue(db: Db, userId: string, deckId: string | null, mode: 'all' | 
     .get(userId, today) as { count: number }).count;
   const limit = (db.prepare('SELECT new_per_day FROM settings WHERE user_id = ?').get(userId) as { new_per_day: number } | undefined)?.new_per_day ?? 10;
   const rows = ownedRows(db, userId, deckId);
-  const due = shuffle(rows.filter((row) => row.introducedDay !== null && row.dueAt <= now.toISOString()));
-  const fresh = shuffle(rows.filter((row) => row.introducedDay === null));
+  const dueUnits = shuffle(rows.filter((row) => row.introducedDay !== null && row.dueAt <= now.toISOString()));
+  const freshUnits = shuffle(rows.filter((row) => row.introducedDay === null));
+  const due = uniqueCards(dueUnits);
+  const fresh = uniqueCards(freshUnits);
   const availableNew = Math.max(0, limit - introducedToday);
   const dueForSession = mode === 'new' ? [] : due;
   const newForSession = mode === 'due' ? [] : fresh.slice(0, availableNew);
-  const dueWithinLimit = reviewLimit > 0 ? dueForSession.slice(0, reviewLimit) : dueForSession;
+  const newCardIds = new Set(newForSession.map((row) => row.cardId));
+  const dueWithoutNewCards = dueForSession.filter((row) => !newCardIds.has(row.cardId));
+  const dueWithinLimit = reviewLimit > 0 ? dueWithoutNewCards.slice(0, reviewLimit) : dueWithoutNewCards;
   const chosen = [...newForSession, ...dueWithinLimit];
   return {
-    dueCount: due.length,
-    newCount: Math.min(fresh.length, availableNew),
+    dueCount: dueUnits.length,
+    newCount: Math.min(freshUnits.length, availableNew),
     items: chosen.map((row, index) => ({
       unitId: row.unitId, cardId: row.cardId, deckId: row.deckId, deckName: row.deckName,
       languageName: row.languageName, direction: row.direction, isNew: row.introducedDay === null,
@@ -315,8 +327,8 @@ export function registerStudyRoutes(app: FastifyInstance, db: Db, authenticate: 
     if (!user) return;
     const deckId = field((request.query as { deckId?: string }).deckId, 40) || null;
     if (deckId && !ownerDeck(db, deckId, user.id)) return reply.code(404).send({ error: 'Baralho não encontrado.' });
-    const practiced = shuffle(ownedRows(db, user.id, deckId)
-      .filter((row) => row.introducedDay !== null));
+    const practiced = uniqueCards(shuffle(ownedRows(db, user.id, deckId)
+      .filter((row) => row.introducedDay !== null)));
     return { dueCount: 0, newCount: 0, items: practiced.map((row) => ({
       unitId: row.unitId, cardId: row.cardId, deckId: row.deckId, deckName: row.deckName,
       languageName: row.languageName, direction: row.direction, isNew: false,

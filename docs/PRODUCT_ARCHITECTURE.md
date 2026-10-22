@@ -13,7 +13,7 @@ Aplicativo pessoal de flashcards para idiomas. Começa com inglês, permite adic
 
 - Criar, editar e excluir idiomas e baralhos; criar, editar, buscar e excluir cartões.
 - Cartões de palavra ou frase, com pergunta, resposta, exemplo, observação e tags. Só pergunta, resposta e baralho são obrigatórios.
-- Revisão em um sentido ou nos dois. Cada sentido é uma unidade de revisão independente, com estado e histórico próprios.
+- Revisão em um sentido ou nos dois. Cada sentido é uma unidade de revisão independente, com estado e histórico próprios; dentro de uma sessão, o cartão pai só aparece uma vez, identificado por seu cardId.
 - Tela inicial com revisões vencidas, cartões novos disponíveis, tempo estudado e sequência de dias. Gráficos aparecem apenas quando houver dados suficientes.
 - Manter todas as revisões vencidas pendentes, com limite configurável de revisões por sessão. Cartões novos entram primeiro, limitados separadamente por dia. A pessoa pode estudar vencidos, novos ou ambos; o que não couber fica pendente para outra sessão.
 - Sessão com revelar resposta e avaliar: Errei, Difícil, Bom, Fácil. Cada avaliação é persistida imediatamente.
