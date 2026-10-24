@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { api } from './api';
 import { HighlightField, HighlightedText } from './HighlightText';
+import BatchImport from './BatchImport';
 
 export type Deck = { id: string; name: string; description: string; languageId: string; languageName: string; cardCount: number };
 type Card = { id: string; deckId: string; prompt: string; answer: string; example: string; notes: string; tags: string[]; directions: 'forward' | 'reverse' | 'both'; hasAudio: boolean };
@@ -19,6 +20,7 @@ export default function CardsPage({ deck, onBack, onChanged }: Props) {
   const [tags, setTags] = useState('');
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [directions, setDirections] = useState<Card['directions']>('forward');
+  const [batchImport, setBatchImport] = useState(false);
 
   async function refresh() {
     setCards(await api<Card[]>('/cards?deckId=' + encodeURIComponent(deck.id)));
@@ -109,7 +111,7 @@ export default function CardsPage({ deck, onBack, onChanged }: Props) {
     <button className="text-button back-link" onClick={onBack}>← Meus baralhos</button>
     <div className="eyebrow">{deck.languageName.toUpperCase()} · BARALHO</div>
     <div className="page-title"><div><h1>{deck.name}</h1><p className="intro">{cards.length} {cards.length === 1 ? 'cartão' : 'cartões'} neste baralho</p></div>
-      <button className="primary" onClick={() => open('new')}>+ Criar cartão</button></div>
+      <div className="card-page-actions"><button className="ghost" onClick={() => setBatchImport(true)}>Importar em lote</button><button className="primary" onClick={() => open('new')}>+ Criar cartão</button></div></div>
     {error && !editing && <div className="error" role="alert">{error}</div>}
     {cards.length > 0 && <input className="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar cartão, resposta ou tag..." aria-label="Buscar cartões" />}
     {visibleCards.length ? <div className="card-list">{visibleCards.map((card) => <article className="card-row" key={card.id}>
@@ -120,6 +122,8 @@ export default function CardsPage({ deck, onBack, onChanged }: Props) {
         <button className="danger-text" onClick={() => remove(card)}>Excluir</button></div>
     </article>)}</div>
       : <div className="empty empty-action">{cards.length ? <p>Nenhum cartão corresponde à busca.</p> : <><h2>Este baralho ainda está vazio.</h2><p>Crie seu primeiro cartão para começar a estudar.</p><button className="primary" onClick={() => open('new')}>Criar primeiro cartão</button></>}</div>}
+
+    {batchImport && <BatchImport deckId={deck.id} deckName={deck.name} onClose={() => setBatchImport(false)} onImported={async () => { await refresh(); await onChanged(); }} />}
 
     {editing && <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setEditing(null); }}>
       <form className="modal card-modal" onSubmit={(event) => save(event)}>

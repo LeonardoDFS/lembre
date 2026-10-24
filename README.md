@@ -8,7 +8,8 @@ Flashcards para estudar idiomas, com revisão espaçada, interface em português
 
 ## O que já funciona
 
-- Cartões em um ou dois sentidos, com exemplos, observações, negrito, grifo e áudio opcional.
+- Cartões em um ou dois sentidos, com exemplos, observações, negrito, grifo e um áudio opcional por cartão.
+- Importação em lote de pares de linhas em inglês e português, com prévia editável e áudio arrastado para cada cartão ou associado por nomes numerados.
 - Revisão espaçada com FSRS e prévia do próximo intervalo para cada avaliação.
 - Limite diário configurável de cartões novos, priorizados antes das revisões, e limite separado e configurável de 5, 10 ou 20 revisões por sessão (ou sem limite). Você pode estudar só novos, só vencidos ou ambos; revisões que sobrarem continuam pendentes.
 - Fila embaralhada dentro dos grupos de vencidos e novos; treino livre sem alterar o agendamento.
