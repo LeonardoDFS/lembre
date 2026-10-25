@@ -119,7 +119,7 @@ export default function StudyPage({ deckId, practice, mode, reviewLimit, onBack,
     {practice && <p className="practice-note">Treino livre · ordem aleatória · sem alterar o agendamento</p>}
     <div className="study-header"><button className="text-button" onClick={onBack}>✕ Encerrar sessão</button><span>{item.deckName}</span><span>{reviewed + 1} de {reviewed + queue.items.length}</span></div>
     <div className="study-progress"><div style={{ width: (reviewed / (reviewed + queue.items.length) * 100) + '%' }} /></div>
-    <div className="study-card"><div className="study-label">{item.languageName} · {item.isNew ? 'NOVO' : 'REVISÃO'} · {item.direction === 'reverse' ? 'RESPOSTA → PERGUNTA' : 'PERGUNTA → RESPOSTA'}</div>
+    <div className="study-card" key={item.unitId}><div className="study-label">{item.languageName} · {item.isNew ? 'NOVO' : 'REVISÃO'} · {item.direction === 'reverse' ? 'RESPOSTA → PERGUNTA' : 'PERGUNTA → RESPOSTA'}</div>
       <h1><HighlightedText text={item.prompt} /></h1>
       {item.hasAudio && <audio controls preload="none" src={'/api/cards/' + item.cardId + '/audio'} aria-label="Áudio do cartão" />}
       {revealed && <div className="study-answer"><span>RESPOSTA</span><h2><HighlightedText text={item.answer} /></h2>

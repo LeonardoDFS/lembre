@@ -324,7 +324,7 @@ export default function App() {
               {decks.length > 0 && <button className="hero-link" onClick={() => setView('decks')}>Ver baralhos →</button>}
               {stats.totalReviews > 0 && <button className="hero-link" onClick={startPractice}>Treino livre ↗</button>}</div>
           </div><div className="hero-symbol">✦</div></section>
-          <section className="streak-card" aria-label="Sequência e meta diária">
+          <section className={"streak-card" + (stats.reviewedToday >= settings.dailyGoal ? " goal-complete" : "")} aria-label="Sequência e meta diária">
             <div className={'streak-flame ' + (stats.reviewedToday > 0 ? 'is-lit' : '')} aria-hidden="true">🔥</div>
             <div className="streak-copy"><span className="eyebrow">SUA SEQUÊNCIA</span><div className="streak-count">{stats.streakDays}<small>{stats.streakDays === 1 ? 'dia' : 'dias'} seguidos</small></div>
               <p>{stats.reviewedToday > 0 ? 'Você já estudou hoje. Sua sequência está em dia!' : stats.streakDays > 0 ? `Faça uma revisão hoje para manter sua sequência de ${stats.streakDays} ${stats.streakDays === 1 ? 'dia' : 'dias'}.` : 'Uma revisão hoje já começa sua sequência.'}</p></div>

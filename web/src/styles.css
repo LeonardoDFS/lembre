@@ -154,3 +154,45 @@
 [data-theme="dark"] .daily-goal-setting select{background:#252a3c;color:#e9eaf3;border-color:#3a4058}
 @media(max-width:850px){.streak-card{grid-template-columns:60px minmax(160px,1fr) minmax(205px,280px);gap:13px;padding:19px}.streak-flame{width:54px;height:54px;font-size:30px}.daily-goal{padding-left:15px}}
 @media(max-width:600px){.streak-card{grid-template-columns:52px minmax(0,1fr);gap:12px;padding:16px;margin:18px 0 23px}.streak-flame{width:48px;height:48px;border-radius:15px;font-size:27px}.streak-count{font-size:24px}.streak-copy p{font-size:12px}.daily-goal{grid-column:1/-1;border-left:0;border-top:1px solid #e8eaf2;padding:14px 0 0}.daily-goal-setting{font-size:12px}.daily-goal-setting select{font-size:12px;padding:6px 9px}[data-theme="dark"] .daily-goal{border-color:#343a50}}
+
+/* Movimento suave e detalhes visuais */
+@keyframes lembre-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes lembre-card{from{opacity:.65;transform:translateY(8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes lembre-answer{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes lembre-glow{0%,100%{transform:translateY(0) scale(1.03)}50%{transform:translateY(-3px) scale(1.06)}}
+@keyframes lembre-drift{from{transform:translate(0,0) rotate(0deg)}to{transform:translate(-12px,12px) rotate(6deg)}}
+.hero{position:relative;isolation:isolate;overflow:hidden}
+.hero::before{content:"";position:absolute;z-index:0;width:310px;height:310px;right:-45px;top:-150px;border:1px solid #ffffff2d;border-radius:50%;box-shadow:0 0 0 65px #ffffff0c,0 0 0 130px #ffffff07;pointer-events:none;animation:lembre-drift 12s ease-in-out infinite alternate}
+.hero::after{content:"";position:absolute;z-index:0;left:-70px;bottom:-170px;width:330px;height:280px;border-radius:50%;background:radial-gradient(circle,#9eb0ff24,transparent 69%);pointer-events:none}
+.hero>div{position:relative;z-index:1}.hero-symbol{transition:transform .4s ease;animation:lembre-drift 8s ease-in-out infinite alternate}
+.hero,.streak-card,.activity-card,.page-title,.auth-card{animation:lembre-enter .42s ease-out both}
+.streak-card{animation-delay:.07s;transition:border-color .22s ease,box-shadow .22s ease,background .22s ease}
+.streak-card.goal-complete{border-color:#ffdaa9;background:linear-gradient(110deg,#fff,#fffaf4);box-shadow:0 5px 20px #ec943018}
+.streak-card.goal-complete .daily-goal-head span{color:#c96b1d}
+.streak-flame.is-lit{animation:lembre-glow 4.5s ease-in-out infinite}
+.daily-goal-track span{transition:width .55s cubic-bezier(.2,.75,.25,1)}
+.stats-grid .stat-card{animation:lembre-enter .35s ease-out both;transition:border-color .2s ease,box-shadow .2s ease}
+.stats-grid .stat-card:nth-child(1){animation-delay:.08s}.stats-grid .stat-card:nth-child(2){animation-delay:.12s}.stats-grid .stat-card:nth-child(3){animation-delay:.16s}.stats-grid .stat-card:nth-child(4){animation-delay:.2s}.stats-grid .stat-card:nth-child(5){animation-delay:.24s}.stats-grid .stat-card:nth-child(6){animation-delay:.28s}
+.activity-card{animation-delay:.15s}.activity-cell{transition:transform .16s ease,box-shadow .16s ease}
+.card-list .card-row,.deck-grid .deck-card,.batch-preview-card{animation:lembre-enter .3s ease-out both}
+.deck-grid .deck-card:nth-child(2),.card-list .card-row:nth-child(2){animation-delay:.04s}.deck-grid .deck-card:nth-child(3),.card-list .card-row:nth-child(3){animation-delay:.08s}.deck-grid .deck-card:nth-child(4),.card-list .card-row:nth-child(4){animation-delay:.12s}
+.deck-card,.card-row,.language-list .language-main,.batch-preview-card{transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+.primary,.ghost,.light-button,.theme-button,.nav-item,.rate-button,.hero-link,.text-button{transition:transform .16s ease,background-color .18s ease,box-shadow .18s ease,color .18s ease,border-color .18s ease}
+.study-card{animation:lembre-card .27s ease-out both}.study-answer{animation:lembre-answer .28s ease-out both}
+.modal-backdrop{animation:lembre-enter .18s ease-out both}.modal{animation:lembre-card .25s ease-out both}
+button:focus-visible,.brand-home:focus-visible,.activity-cell:focus-visible{outline:3px solid #788bff;outline-offset:3px}
+@media(hover:hover){
+  .primary:hover:not(:disabled),.light-button:hover:not(:disabled),.ghost:hover:not(:disabled),.theme-button:hover:not(:disabled){transform:translateY(-2px)}
+  .hero-link:hover,.text-button:hover{transform:translateX(2px)}
+  .nav-item:hover:not(.active){transform:translateX(2px)}
+  .deck-card:hover{transform:translateY(-3px);border-color:#c9cff8;box-shadow:0 10px 22px #29358a12}
+  .card-row:hover,.language-list .language-main:hover{transform:translateY(-1px);border-color:#cfd4f2;box-shadow:0 7px 16px #29358a0c}
+  .stat-card:hover{border-color:#d6daf1;box-shadow:0 6px 17px #29358a0d}
+  .activity-cell:not(.empty-cell):hover{position:relative;z-index:1;transform:scale(1.32);box-shadow:0 2px 7px #1e2e8f40}
+  .rate-button:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 7px 18px #191b2117}
+}
+.primary:active:not(:disabled),.light-button:active:not(:disabled),.ghost:active:not(:disabled),.rate-button:active:not(:disabled){transform:translateY(0) scale(.98)}
+[data-theme="dark"] .streak-card.goal-complete{background:linear-gradient(110deg,#1c2030,#2b2730);border-color:#6a4b45;box-shadow:0 5px 20px #b66c2816}
+[data-theme="dark"] .streak-card.goal-complete .daily-goal-head span{color:#ffc088}
+[data-theme="dark"] .deck-card:hover,[data-theme="dark"] .card-row:hover,[data-theme="dark"] .stat-card:hover,[data-theme="dark"] .language-list .language-main:hover{border-color:#4a5685;box-shadow:0 8px 20px #0000002a}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
