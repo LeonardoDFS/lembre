@@ -118,25 +118,27 @@ export function registerStudyRoutes(app: FastifyInstance, db: Db, authenticate: 
   app.get('/api/settings', async (request, reply) => {
     const user = authenticate(db, request, reply);
     if (!user) return;
-    return db.prepare('SELECT new_per_day AS newPerDay, review_per_session AS reviewPerSession, timezone, theme FROM settings WHERE user_id = ?').get(user.id);
+    return db.prepare('SELECT new_per_day AS newPerDay, review_per_session AS reviewPerSession, daily_goal AS dailyGoal, timezone, theme FROM settings WHERE user_id = ?').get(user.id);
   });
 
   app.patch('/api/settings', async (request, reply) => {
     const user = authenticate(db, request, reply);
     if (!user) return;
     const body = object(request);
-    const current = db.prepare('SELECT new_per_day AS newPerDay, review_per_session AS reviewPerSession, theme FROM settings WHERE user_id = ?')
-      .get(user.id) as { newPerDay: number; reviewPerSession: number; theme: string };
+    const current = db.prepare('SELECT new_per_day AS newPerDay, review_per_session AS reviewPerSession, daily_goal AS dailyGoal, theme FROM settings WHERE user_id = ?')
+      .get(user.id) as { newPerDay: number; reviewPerSession: number; dailyGoal: number; theme: string };
     const theme = body.theme === undefined ? current.theme : body.theme;
     const limit = body.newPerDay === undefined ? current.newPerDay : body.newPerDay;
     const reviewLimit = body.reviewPerSession === undefined ? current.reviewPerSession : body.reviewPerSession;
+    const dailyGoal = body.dailyGoal === undefined ? current.dailyGoal : body.dailyGoal;
     if (!['light', 'dark'].includes(String(theme)) || !Number.isInteger(limit) || Number(limit) < 0 || Number(limit) > 100
-      || !Number.isInteger(reviewLimit) || Number(reviewLimit) < 0 || Number(reviewLimit) > 100) {
+      || !Number.isInteger(reviewLimit) || Number(reviewLimit) < 0 || Number(reviewLimit) > 100
+      || !Number.isInteger(dailyGoal) || Number(dailyGoal) < 1 || Number(dailyGoal) > 100) {
       return reply.code(400).send({ error: 'Preferência inválida.' });
     }
-    db.prepare('UPDATE settings SET theme = ?, new_per_day = ?, review_per_session = ? WHERE user_id = ?')
-      .run(theme, limit, reviewLimit, user.id);
-    return { theme, newPerDay: limit, reviewPerSession: reviewLimit };
+    db.prepare('UPDATE settings SET theme = ?, new_per_day = ?, review_per_session = ?, daily_goal = ? WHERE user_id = ?')
+      .run(theme, limit, reviewLimit, dailyGoal, user.id);
+    return { theme, newPerDay: limit, reviewPerSession: reviewLimit, dailyGoal };
   });
 
   app.get('/api/study/stats', async (request, reply) => {

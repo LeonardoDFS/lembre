@@ -82,6 +82,7 @@ export function openDatabase(dataDir = process.env.LEMBRE_DATA_DIR ?? resolve(pr
       user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
       new_per_day INTEGER NOT NULL DEFAULT 10,
       review_per_session INTEGER NOT NULL DEFAULT 10,
+      daily_goal INTEGER NOT NULL DEFAULT 10,
       timezone TEXT NOT NULL DEFAULT 'America/Sao_Paulo',
       theme TEXT NOT NULL DEFAULT 'light'
     );
@@ -97,6 +98,9 @@ export function openDatabase(dataDir = process.env.LEMBRE_DATA_DIR ?? resolve(pr
   const settingsColumns = db.pragma('table_info(settings)') as { name: string }[];
   if (!settingsColumns.some((column) => column.name === 'review_per_session')) {
     db.exec('ALTER TABLE settings ADD COLUMN review_per_session INTEGER NOT NULL DEFAULT 10');
+  }
+  if (!settingsColumns.some((column) => column.name === 'daily_goal')) {
+    db.exec('ALTER TABLE settings ADD COLUMN daily_goal INTEGER NOT NULL DEFAULT 10');
   }
   if (!settingsColumns.some((column) => column.name === 'theme')) {
     db.exec("ALTER TABLE settings ADD COLUMN theme TEXT NOT NULL DEFAULT 'light'");

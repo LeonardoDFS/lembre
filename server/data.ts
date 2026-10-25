@@ -20,7 +20,7 @@ function rows(db: Db, sql: string, userId: string): Row[] {
 function exportDocument(db: Db, userId: string): Document {
   return {
     format: 'lembre-export', version: 1, exportedAt: new Date().toISOString(),
-    settings: db.prepare('SELECT new_per_day, timezone, theme FROM settings WHERE user_id = ?').get(userId) as Row,
+    settings: db.prepare('SELECT new_per_day, daily_goal, timezone, theme FROM settings WHERE user_id = ?').get(userId) as Row,
     languages: rows(db, 'SELECT id, name, code, created_at FROM languages WHERE user_id = ?', userId),
     decks: rows(db, 'SELECT d.id, d.language_id, d.name, d.description, d.created_at, d.updated_at FROM decks d JOIN languages l ON l.id = d.language_id WHERE l.user_id = ?', userId),
     cards: rows(db, 'SELECT c.* FROM cards c JOIN decks d ON d.id = c.deck_id JOIN languages l ON l.id = d.language_id WHERE l.user_id = ?', userId),
@@ -54,8 +54,11 @@ function validate(value: unknown): Document {
   if (data.format !== 'lembre-export' || data.version !== 1) throw new Error('Formato de exportação não reconhecido.');
   const settings = record(data.settings);
   const limit = settings.new_per_day;
+  const dailyGoal = settings.daily_goal ?? 10;
   if (!Number.isInteger(limit) || Number(limit) < 0 || Number(limit) > 100 ||
+      !Number.isInteger(dailyGoal) || Number(dailyGoal) < 1 || Number(dailyGoal) > 100 ||
       !['light', 'dark'].includes(String(settings.theme))) throw new Error('Ajustes inválidos.');
+  settings.daily_goal = dailyGoal;
   const timezone = string(settings, 'timezone', 80)!;
   try { new Intl.DateTimeFormat('en-US', { timeZone: timezone }); } catch { throw new Error('Fuso horário inválido.'); }
   const languages = list(data, 'languages', 100);
@@ -151,8 +154,8 @@ function importDocument(db: Db, userId: string, data: Document): void {
       db.prepare('INSERT INTO review_logs(id, unit_id, rating, reviewed_at, previous_state_json, next_state_json, elapsed_ms, reviewed_day) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
         .run(randomUUID(), unitIds.get(row.unit_id as string), row.rating, row.reviewed_at, row.previous_state_json, row.next_state_json, row.elapsed_ms, row.reviewed_day);
     }
-    db.prepare('UPDATE settings SET new_per_day = ?, timezone = ?, theme = ? WHERE user_id = ?')
-      .run(data.settings.new_per_day, data.settings.timezone, data.settings.theme, userId);
+    db.prepare('UPDATE settings SET new_per_day = ?, daily_goal = ?, timezone = ?, theme = ? WHERE user_id = ?')
+      .run(data.settings.new_per_day, data.settings.daily_goal ?? 10, data.settings.timezone, data.settings.theme, userId);
   })();
 }
 

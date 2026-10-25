@@ -6,7 +6,7 @@ import ActivityMap, { type Activity } from './ActivityMap';
 
 type User = { id: string; name: string; role: 'owner' | 'member'; active?: number };
 type Language = { id: string; name: string; code: string | null };
-type Settings = { theme: 'light' | 'dark'; newPerDay: number; reviewPerSession: number; timezone: string };
+type Settings = { theme: 'light' | 'dark'; newPerDay: number; reviewPerSession: number; dailyGoal: number; timezone: string };
 type View = 'home' | 'decks' | 'cards' | 'study' | 'users' | 'data';
 type StudyMode = 'all' | 'new' | 'due';
 type Stats = { totalReviews: number; reviewedToday: number; timeTodayMs: number; streakDays: number };
@@ -33,7 +33,7 @@ export default function App() {
   const [restoreName, setRestoreName] = useState('');
   const [restorePassword, setRestorePassword] = useState('');
   const [restorePhrase, setRestorePhrase] = useState('');
-  const [settings, setSettings] = useState<Settings>({ theme: 'light', newPerDay: 10, reviewPerSession: 10, timezone: 'America/Sao_Paulo' });
+  const [settings, setSettings] = useState<Settings>({ theme: 'light', newPerDay: 10, reviewPerSession: 10, dailyGoal: 10, timezone: 'America/Sao_Paulo' });
   const [view, setView] = useState<View>('home');
   const [activeDeckId, setActiveDeckId] = useState<string | null>(null);
   const [studyDeckId, setStudyDeckId] = useState<string | null>(null);
@@ -142,6 +142,13 @@ export default function App() {
       await api('/settings', 'PATCH', { reviewPerSession: value });
       await loadData(user?.role);
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível alterar o limite de revisões.'); }
+  }
+  async function updateDailyGoal(value: number) {
+    setError('');
+    try {
+      const saved = await api<Settings>('/settings', 'PATCH', { dailyGoal: value });
+      setSettings((current) => ({ ...current, ...saved }));
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível alterar a meta diária.'); }
   }
   async function toggleTheme() {
     const next = settings.theme === 'light' ? 'dark' : 'light';
@@ -289,7 +296,7 @@ export default function App() {
 
   return <div className="app-shell">
     <aside className="sidebar">
-      <div className="brand"><span className="brand-mark">L</span> Lembre<span className="brand-dot">•</span></div>
+      <button type="button" className="brand brand-home" onClick={() => setView('home')} aria-label="Voltar ao início"><span className="brand-mark">L</span> Lembre<span className="brand-dot">•</span></button>
       <div className="side-label">SEU ESPAÇO</div>
       <button className={'nav-item ' + (view === 'home' ? 'active' : '')} onClick={() => setView('home')}>⌂ <span>Início</span></button>
       <button className={'nav-item ' + (view === 'decks' || view === 'cards' ? 'active' : '')} onClick={() => setView('decks')}>▣ <span>Meus baralhos</span></button>
@@ -317,12 +324,21 @@ export default function App() {
               {decks.length > 0 && <button className="hero-link" onClick={() => setView('decks')}>Ver baralhos →</button>}
               {stats.totalReviews > 0 && <button className="hero-link" onClick={startPractice}>Treino livre ↗</button>}</div>
           </div><div className="hero-symbol">✦</div></section>
+          <section className="streak-card" aria-label="Sequência e meta diária">
+            <div className={'streak-flame ' + (stats.reviewedToday > 0 ? 'is-lit' : '')} aria-hidden="true">🔥</div>
+            <div className="streak-copy"><span className="eyebrow">SUA SEQUÊNCIA</span><div className="streak-count">{stats.streakDays}<small>{stats.streakDays === 1 ? 'dia' : 'dias'} seguidos</small></div>
+              <p>{stats.reviewedToday > 0 ? 'Você já estudou hoje. Sua sequência está em dia!' : stats.streakDays > 0 ? `Faça uma revisão hoje para manter sua sequência de ${stats.streakDays} ${stats.streakDays === 1 ? 'dia' : 'dias'}.` : 'Uma revisão hoje já começa sua sequência.'}</p></div>
+            <div className="daily-goal"><div className="daily-goal-head"><strong>Meta de hoje</strong><span>{Math.min(stats.reviewedToday, settings.dailyGoal)} / {settings.dailyGoal}</span></div>
+              <div className="daily-goal-track" role="progressbar" aria-label="Progresso da meta diária" aria-valuemin={0} aria-valuemax={settings.dailyGoal} aria-valuenow={Math.min(stats.reviewedToday, settings.dailyGoal)}><span style={{ width: Math.min(100, stats.reviewedToday / settings.dailyGoal * 100) + '%' }} /></div>
+              <label className="daily-goal-setting">Objetivo <select value={settings.dailyGoal} onChange={(event) => updateDailyGoal(Number(event.target.value))}>{[5, 10, 15, 20].map((value) => <option key={value} value={value}>{value} revisões</option>)}</select></label>
+              <small>{stats.reviewedToday >= settings.dailyGoal ? 'Meta concluída! Amanhã tem mais.' : 'Qualquer revisão já mantém sua sequência.'}</small></div>
+          </section>
           <div className="stats-grid"><div className="stat-card"><span>Revisões vencidas</span><strong>{queue.dueCount}</strong></div>
             <div className="stat-card"><span>Novos disponíveis</span><strong>{queue.newCount}</strong></div>
             <div className="stat-card"><span>Cartões criados</span><strong>{totalCards}</strong></div>
             <div className="stat-card"><span>Revisados hoje</span><strong>{stats.reviewedToday}</strong></div>
             <div className="stat-card"><span>Tempo hoje</span><strong>{Math.round(stats.timeTodayMs / 60000)} min</strong></div>
-            <div className="stat-card"><span>Sequência</span><strong>{stats.streakDays} {stats.streakDays === 1 ? 'dia' : 'dias'}</strong></div></div>
+            <div className="stat-card"><span>Revisões totais</span><strong>{stats.totalReviews}</strong></div></div>
           <ActivityMap activity={activity} />
           <div className="study-options">
             <label>Novos por dia<select aria-label="Cartões novos por dia" value={settings.newPerDay} onChange={(event) => updateNewLimit(Number(event.target.value))}>

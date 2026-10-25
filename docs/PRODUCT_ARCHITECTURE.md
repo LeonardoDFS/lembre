@@ -1,7 +1,7 @@
 # Lembre — produto e arquitetura
 
 Estado: decisões para a primeira versão (14/10/2026).
-Implementado: contas locais, idiomas com renomeação e exclusão, baralhos, busca de cartões, cartões com destaque, negrito, áudio opcional e importação em lote de pares de linhas, revisão espaçada e prévia de intervalos, prioridade de cartões novos e limite de revisões por sessão, limite diário, modo escuro, estatísticas, exportação JSON por conta, restauração por conta e de backup completo com cópia prévia, troca de senha, desativação/reativação de usuários e backups automáticos do SQLite, mapa de atividades e iniciador Lembre.exe com desligamento pelo app. O endereço IPv4 privado do PC respondeu no teste de rede local e o acesso pelo celular na rede local foi confirmado.
+Implementado: contas locais, idiomas com renomeação e exclusão, baralhos, busca de cartões, cartões com destaque, negrito, áudio opcional e importação em lote de pares de linhas, revisão espaçada e prévia de intervalos, prioridade de cartões novos e limite de revisões por sessão, limite diário, modo escuro, estatísticas, exportação JSON por conta, restauração por conta e de backup completo com cópia prévia, troca de senha, desativação/reativação de usuários e backups automáticos do SQLite, mapa de atividades, sequência diária com chama e meta ajustável de revisões, navegação pela marca e iniciador Lembre.exe com desligamento pelo app. O endereço IPv4 privado do PC respondeu no teste de rede local e o acesso pelo celular na rede local foi confirmado.
 Pasta do projeto: repositório lembre.
 Referência visual: protótipos estáticos criados no Stitch; a implementação está neste repositório.
 
@@ -14,7 +14,7 @@ Aplicativo pessoal de flashcards para idiomas. Começa com inglês, permite adic
 - Criar, editar e excluir idiomas e baralhos; criar, editar, buscar e excluir cartões; importar pares de linhas em lote com prévia editável.
 - Cartões de palavra ou frase, com pergunta, resposta, exemplo, observação e tags. Só pergunta, resposta e baralho são obrigatórios.
 - Revisão em um sentido ou nos dois. Cada sentido é uma unidade de revisão independente, com estado e histórico próprios; dentro de uma sessão, o cartão pai só aparece uma vez, identificado por seu cardId.
-- Tela inicial com revisões vencidas, cartões novos disponíveis, tempo estudado e sequência de dias. Gráficos aparecem apenas quando houver dados suficientes.
+- Tela inicial com revisões vencidas, cartões novos disponíveis, tempo estudado, sequência diária com chama e progresso de uma meta de revisões configurável. Uma revisão já mantém a sequência; a meta é um objetivo adicional. Gráficos aparecem apenas quando houver dados suficientes.
 - Manter todas as revisões vencidas pendentes, com limite configurável de revisões por sessão. Cartões novos entram primeiro, limitados separadamente por dia. A pessoa pode estudar vencidos, novos ou ambos; o que não couber fica pendente para outra sessão.
 - Sessão com revelar resposta e avaliar: Errei, Difícil, Bom, Fácil. Cada avaliação é persistida imediatamente.
 - Exportar dados, fazer backup automático e restaurar uma cópia.
@@ -67,7 +67,7 @@ pasta-pai\
 - **Áudio do cartão:** um anexo opcional e individual por cartão, armazenado no SQLite; MP3, WAV, OGG, M4A ou WebM, até 5 MB. Na importação em lote, o áudio pode ser solto diretamente sobre o cartão ou vários arquivos numerados podem ser associados pela posição.
 - **Unidade de revisão:** id, cartão_id, sentido, estado FSRS, próxima revisão, datas. Um cartão bidirecional tem duas unidades.
 - **Registro de revisão:** id, unidade_id, avaliação, data/hora, dia local, tempo gasto e estado antes/depois.
-- **Configuração:** usuario_id, limite diário de novos cartões, limite de revisões por sessão, fuso horário, preferências de estudo.
+- **Configuração:** usuario_id, limite diário de novos cartões, limite de revisões por sessão, meta diária de revisões, fuso horário, preferências de estudo.
 
 Baralhos pertencem ao usuário por meio do idioma; cartões e revisões herdam essa propriedade. Toda consulta e alteração pela API deve verificar o usuário autenticado.
 

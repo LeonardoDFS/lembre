@@ -131,3 +131,26 @@
 [data-theme="dark"] .batch-audio-icon{background:#2b3157;color:#c4caff}
 @media(max-width:600px){.batch-modal{padding:22px 17px;max-height:calc(100vh - 18px)}.batch-preview-list{max-height:40vh}.batch-actions{position:sticky;bottom:-22px;background:inherit;padding:12px 0 2px;flex-wrap:wrap}.batch-actions button{flex:1}.batch-audio-row{gap:7px;padding:8px}.batch-audio-name{font-size:11px}}
 .batch-audio-player{display:block;width:min(100%,360px);height:34px;margin:8px 0 0}
+
+/* Navegação pela marca e motivação diária */
+.brand-home{border:0;background:transparent;color:inherit;padding:0;cursor:pointer;text-align:left}
+.brand-home:hover .brand-mark{transform:translateY(-1px);box-shadow:0 5px 12px #3b52df40}
+.brand-home .brand-mark{transition:transform .15s,box-shadow .15s}
+.streak-card{display:grid;grid-template-columns:72px minmax(180px,1fr) minmax(240px,320px);align-items:center;gap:18px;background:#fff;border:1px solid #ececf3;border-radius:18px;padding:22px 25px;margin:20px 0 25px;box-shadow:0 3px 12px #181a2008}
+.streak-flame{width:64px;height:64px;border-radius:19px;display:grid;place-items:center;background:#f1f2f8;filter:grayscale(.75);font-size:34px;transition:filter .2s,transform .2s}
+.streak-flame.is-lit{background:linear-gradient(145deg,#fff0d8,#ffe1bd);filter:none;transform:scale(1.03);box-shadow:0 5px 15px #f28a2630}
+.streak-copy .eyebrow{display:block;margin-bottom:5px}.streak-count{font-size:28px;line-height:1;font-weight:800;letter-spacing:-.04em}.streak-count small{font-size:13px;letter-spacing:0;color:#74788a;margin-left:7px;font-weight:700}
+.streak-copy p{font-size:13px;line-height:1.5;color:#616575;margin:8px 0 0}
+.daily-goal{border-left:1px solid #e8eaf2;padding-left:22px;min-width:0}.daily-goal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px}.daily-goal-head strong{font-weight:800}.daily-goal-head span{font-weight:800;color:#3b52df;font-variant-numeric:tabular-nums}
+.daily-goal-track{height:9px;background:#eceef6;border-radius:99px;overflow:hidden;margin:10px 0}.daily-goal-track span{display:block;height:100%;background:linear-gradient(90deg,#ffad4b,#f36b37);border-radius:inherit;transition:width .25s ease}
+.daily-goal-setting{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;font-weight:700;color:#777b8c}.daily-goal-setting select{border:1px solid #d9dce8;border-radius:7px;background:#fff;color:#252a3b;padding:5px 8px;font-size:11px}
+.daily-goal>small{display:block;color:#777b8c;font-size:11px;line-height:1.45;margin-top:7px}
+[data-theme="dark"] .streak-card{background:#1c2030;border-color:#30354a;box-shadow:none}
+[data-theme="dark"] .streak-copy p,[data-theme="dark"] .streak-count small,[data-theme="dark"] .daily-goal-setting,[data-theme="dark"] .daily-goal>small{color:#afb4c9}
+[data-theme="dark"] .streak-flame{background:#30354a}
+[data-theme="dark"] .streak-flame.is-lit{background:linear-gradient(145deg,#5a3c31,#633b34);box-shadow:0 5px 15px #f28a2618}
+[data-theme="dark"] .daily-goal{border-color:#343a50}
+[data-theme="dark"] .daily-goal-track{background:#30354a}
+[data-theme="dark"] .daily-goal-setting select{background:#252a3c;color:#e9eaf3;border-color:#3a4058}
+@media(max-width:850px){.streak-card{grid-template-columns:60px minmax(160px,1fr) minmax(205px,280px);gap:13px;padding:19px}.streak-flame{width:54px;height:54px;font-size:30px}.daily-goal{padding-left:15px}}
+@media(max-width:600px){.streak-card{grid-template-columns:52px minmax(0,1fr);gap:12px;padding:16px;margin:18px 0 23px}.streak-flame{width:48px;height:48px;border-radius:15px;font-size:27px}.streak-count{font-size:24px}.streak-copy p{font-size:12px}.daily-goal{grid-column:1/-1;border-left:0;border-top:1px solid #e8eaf2;padding:14px 0 0}.daily-goal-setting{font-size:12px}.daily-goal-setting select{font-size:12px;padding:6px 9px}[data-theme="dark"] .daily-goal{border-color:#343a50}}
