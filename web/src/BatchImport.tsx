@@ -80,15 +80,19 @@ export default function BatchImport({ deckId, deckName, onClose, onImported }: P
 
     const numbered = files.map((file) => {
       const match = file.name.match(/^(\d+)(?:[ ._-]|$)/);
-      return { file, index: match ? Number(match[1]) - 1 : -1 };
+      return { file, number: match ? Number(match[1]) : -1 };
     });
     let assignments: Array<{ file: File; index: number }>;
     if (startIndex !== undefined) {
       assignments = [{ file: files[0], index: startIndex }];
-    } else if (numbered.every((entry) => entry.index >= 0)) {
-      assignments = numbered;
-      const indices = assignments.map((entry) => entry.index);
-      if (new Set(indices).size !== indices.length) { setError('Dois áudios têm o mesmo número no nome. Use números únicos, como 01.mp3, 02.mp3.'); return; }
+    } else if (numbered.every((entry) => entry.number > 0)) {
+      const numbers = numbered.map((entry) => entry.number);
+      if (new Set(numbers).size !== numbers.length) { setError('Dois áudios têm o mesmo número no nome. Use números únicos para cada cartão.'); return; }
+      const firstNumber = Math.min(...numbers);
+      const lastNumber = Math.max(...numbers);
+      // Continuações de textos anteriores podem começar em 24, 35 etc.
+      const offset = lastNumber > rows.length ? firstNumber : 1;
+      assignments = numbered.map(({ file, number }) => ({ file, index: number - offset }));
     } else if (files.length === rows.length) {
       assignments = files
         .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { numeric: true, sensitivity: 'base' }))
@@ -155,7 +159,7 @@ export default function BatchImport({ deckId, deckName, onClose, onImported }: P
       </> : <>
         <div className="batch-summary"><strong>{rows.length} {rows.length === 1 ? 'cartão' : 'cartões'}</strong><span>· perguntas na frente, traduções no verso</span><button type="button" className="text-button" onClick={() => { if (!busy && !rows.some((row) => row.cardId)) { setRows([]); setError(''); setProgress(''); } }} disabled={busy || rows.some((row) => row.cardId)}>Editar texto</button></div>
         <div className="batch-audio-drop" onDragEnter={(event) => { event.preventDefault(); setDragging(true); }} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={(event) => { if (event.currentTarget === event.target) setDragging(false); }} onDrop={handleAudioDrop} data-dragging={dragging}>
-          <strong>Solte áudios aqui para anexá-los</strong><span>Use nomes numerados como 01.mp3, 02.mp3. Também pode soltar um arquivo em um cartão específico.</span>
+          <strong>Solte áudios aqui para anexá-los</strong><span>Solte a sequência numerada desta aula, por exemplo 01–10 ou 24–33. Confira o áudio de cada cartão antes de importar.</span>
         </div>
         <div className="batch-preview-list">{rows.map((row, index) => <article className="batch-preview-card" key={row.key}>
           <div className="batch-card-heading"><span>Cartão {String(index + 1).padStart(2, '0')}</span>{row.cardId && <span className="batch-saved">Salvo</span>}</div>
