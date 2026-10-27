@@ -64,7 +64,7 @@ pasta-pai\
 - **Idioma:** id, usuario_id, nome, código opcional, datas.
 - **Baralho:** id, idioma_id, nome, descrição opcional, datas.
 - **Cartão:** id, baralho_id, pergunta, resposta, exemplo, observação, tags, modos de revisão, datas. Os trechos marcados por botões no editor usam marcação simples e são renderizados como negrito ou grifo.
-- **Áudio do cartão:** um anexo opcional e individual por cartão, armazenado no SQLite; MP3, WAV, OGG, M4A ou WebM, até 5 MB. Na importação em lote, o áudio pode ser solto diretamente sobre o cartão ou vários arquivos numerados podem ser associados pela posição.
+- **Áudio do cartão:** um anexo opcional e individual por cartão, armazenado no SQLite; MP3, WAV, OGG, M4A ou WebM, até 5 MB. Na importação em lote, o áudio pode ser solto diretamente sobre o cartão. Arquivos numerados são ordenados pelo número; em uma continuação como 24–33 para 10 cartões, o primeiro arquivo corresponde ao primeiro cartão da prévia.
 - **Unidade de revisão:** id, cartão_id, sentido, estado FSRS, próxima revisão, datas. Um cartão bidirecional tem duas unidades.
 - **Registro de revisão:** id, unidade_id, avaliação, data/hora, dia local, tempo gasto e estado antes/depois.
 - **Configuração:** usuario_id, limite diário de novos cartões, limite de revisões por sessão, meta diária de revisões, fuso horário, preferências de estudo.

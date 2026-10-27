@@ -4,12 +4,10 @@ Flashcards para estudar idiomas, com revisão espaçada, interface em português
 
 > As imagens abaixo usam uma conta e cartões fictícios. Nenhum banco de dados pessoal faz parte deste repositório.
 
-![Tela inicial do Lembre, com revisões, estatísticas e mapa de atividades](docs/images/inicio.png)
-
 ## O que já funciona
 
 - Cartões em um ou dois sentidos, com exemplos, observações, negrito, grifo e um áudio opcional por cartão.
-- Importação em lote de pares de linhas em inglês e português, com prévia editável e áudio arrastado para cada cartão ou associado por nomes numerados.
+- Importação em lote de pares de linhas, com destaques preservados, prévia editável e um áudio por cartão. Arquivos de áudio numerados são ordenados pelo número; em uma continuação como 24–33 para 10 cartões, o 24 é associado ao primeiro cartão da prévia.
 - Revisão espaçada com FSRS e prévia do próximo intervalo para cada avaliação.
 - Limite diário configurável de cartões novos, priorizados antes das revisões, e limite separado e configurável de 5, 10 ou 20 revisões por sessão (ou sem limite). Você pode estudar só novos, só vencidos ou ambos; revisões que sobrarem continuam pendentes.
 - Fila embaralhada dentro dos grupos de vencidos e novos; treino livre sem alterar o agendamento.
@@ -18,11 +16,21 @@ Flashcards para estudar idiomas, com revisão espaçada, interface em português
 - Contas locais separadas, backups automáticos, exportação e restauração.
 - Acesso opcional pelo celular na mesma rede Wi-Fi, enquanto o PC estiver ligado.
 
+| Tela inicial | Importação em lote |
+| --- | --- |
+| ![Tela inicial do Lembre, com sequência, meta e mapa de atividades](docs/images/inicio.jpg) | ![Prévia de importação em lote com áudios numerados](docs/images/importacao-lote.jpg) |
+
 | Baralhos | Sessão de revisão |
 | --- | --- |
 | ![Baralhos de demonstração](docs/images/baralhos.png) | ![Revisão de um cartão de demonstração](docs/images/revisao.png) |
 
 [Ver a tela de cartões e seus destaques](docs/images/cartoes.png).
+
+## Importação em lote
+
+Cole os cartões como pares de linhas alternadas: pergunta em inglês e tradução em português. Os trechos marcados com `==assim==` são preservados. Gere a prévia para conferir ou editar os cartões antes de importar.
+
+Os áudios podem ser arrastados individualmente para o cartão correspondente ou selecionados juntos pelo espaço de importação. Arquivos com números no nome são organizados numericamente. A numeração pode continuar de uma aula anterior: com 10 cartões e arquivos de `24 ...` a `33 ...`, o 24 fica no cartão 1 e o 33 no cartão 10. A prévia mostra o nome e o controle de áudio associado a cada cartão. Cada áudio pode ter até 5 MB.
 
 ## Rodar no computador
 
